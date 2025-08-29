@@ -10,6 +10,8 @@ clean() { # simple function to handle command line option
 	echo "removing temporary files $@"
 }
 
+# Parse the command line arguments into CMDLINE_ARGS array
+# Default values can be set with: cmdline.parse -f default_filename "$@"
 cmdline.parse "$@"
 
 set -- ${CMDLINE_ARGS[positional]}
