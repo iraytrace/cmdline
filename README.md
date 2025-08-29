@@ -13,9 +13,11 @@ example.sh:
 
 source cmdline_options.sh
 
-cmdline.add_option "c:clean:Remove Temporary Files"
-cmdline.add_option "f:file:filename:Specify filename to use"
-cmdline.add_option "v:version:Show version"
+cmdline.add_option "c|clean||Remove Temporary Files"
+cmdline.add_option "f|file|filename|Specify filename to use"
+cmdline.add_option "v|version||Show version"
+
+cmdline.set_default "file" "filename=default.txt"
 
 cmdline.parse "$@"
 set -- ${CMDLINE_ARGS[positional]}
@@ -34,7 +36,7 @@ Usage: ./example.sh [OPTIONS]
 Options:
   -h --help            Display this help message
   -c --clean           Remove Temporary Files
-  -f --file <filename> Specify filename to use
+  -f --file <filename> Specify filename to use (default=default.txt)
   -v --version         Show version
 
 $ ./example.sh --file filename.txt

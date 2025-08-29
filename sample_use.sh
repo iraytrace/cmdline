@@ -2,9 +2,12 @@
 
 source cmdline_options.sh
 
-cmdline.add_option "c:clean::Remove Temporary Files"
-cmdline.add_option "f:file:filename=default.txt:Specify filename to use"
-cmdline.add_option "v:version::Show version"
+cmdline.add_option "c|clean||Remove Temporary Files"
+cmdline.add_option "f|file|filename=default.txt|Specify filename to use format:filename.txt"
+cmdline.add_option "t|timestamp|date=now|Specify timestamp"
+cmdline.add_option "v|version||Show version"
+
+cmdline.set_default "timestamp" "date=$(date)"
 
 clean() { # simple function to handle command line option
 	echo "removing temporary files $@"
@@ -17,10 +20,13 @@ cmdline.parse "$@"
 set -- ${CMDLINE_ARGS[positional]}
 
 # print all the key/value pairs
-echo "Command line options values:"
-for key in "${!CMDLINE_ARGS[@]}" ; do
-	echo "  ${key}=${CMDLINE_ARGS[$key]}"
-done
+cmdline.print_args
+
+# optional debugging output
+# cmdline.print_options
+
+# To invoke usage message directly:
+# cmdline.usage
 
 # call functions for each command line argument if defined
 for key in "${!CMDLINE_ARGS[@]}" ; do

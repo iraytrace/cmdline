@@ -3,9 +3,9 @@
 # Example use:
 # source cmdline_options.sh
 # 
-# cmdline.add_option "c:clean::Remove Temporary Files"
-# cmdline.add_option "f:file:filename=default.txt:Specify filename to use"
-# cmdline.add_option "v:version::Show version"
+# cmdline.add_option "c|clean||Remove Temporary Files"
+# cmdline.add_option "f|file|filename=default.txt|Specify filename to use"
+# cmdline.add_option "v|version||Show version"
 #
 # cmdline.parse "$@"
 # # print all the key/value pairs
@@ -22,8 +22,38 @@ declare -g CMDLINE_OPTIONS=( )
 function cmdline.add_option() {
   CMDLINE_OPTIONS+=("$@")
 }
+cmdline.add_option "h|help||Display this help message"
 
-cmdline.add_option "h:help::Display this help message"
+function cmdline.print_options() {
+  echo "Command line options values:"
+  for key in "${!CMDLINE_OPTIONS[@]}" ; do
+    echo "  ${key}=${CMDLINE_OPTIONS[$key]}"
+  done
+}
+
+function cmdline.print_args() {
+  echo "Command line args values:"
+  for key in "${!CMDLINE_ARGS[@]}" ; do
+    echo "  ${key}=${CMDLINE_ARGS[$key]}"
+  done
+}
+
+# call with long as key
+# cmdline.add_default "file" "filename=default_value"
+function cmdline.set_default() {
+  for i in "${!CMDLINE_OPTIONS[@]}"; do
+    IFS='|' read -r short long arg desc <<< "${CMDLINE_OPTIONS[$i]}"
+    if [[ "${long}" == "$1" ]]; then
+      if [[ "$arg" == "" ]] ; then
+        echo "ERROR: attempting to add default to option without arg"
+        exit 1
+      fi
+      CMDLINE_OPTIONS[i]="${short}|${long}|$2|${desc}"
+      break
+    fi
+  done
+}
+
 
 #
 # 
@@ -33,7 +63,7 @@ function cmdline.max_width() {
 	for key in "${!CMDLINE_OPTIONS[@]}"; do
     str="${CMDLINE_OPTIONS[$key]}"
 
-    IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
+    IFS="|" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
     IFS="=" read -r txt default <<< "$arg"
 
 		left_side="${short}${long}${txt}"
@@ -48,7 +78,7 @@ function cmdline.max_width() {
 
 function cmdline.print() {
 	# print all the key/value pairs
-	echo "Command line options values:"
+	echo "Command line options values|"
 	for key in "${!CMDLINE_ARGS[@]}" ; do
 		echo "  ${key}=${CMDLINE_ARGS[$key]}"
 	done
@@ -66,8 +96,7 @@ function cmdline.usage() {
 
 	for key in "${!CMDLINE_OPTIONS[@]}"; do
 		#echo "$key = ${CMDLINE_OPTIONS[$key]}"
-    IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
- 	
+    IFS="|" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
     IFS="=" read -r txt default <<< "$arg"
 		left_string="-${short} --${long} ${arg:+<}${txt}${arg:+>}"
 		right_string="${desc} ${default:+(default=}${default}${default:+)}"
@@ -81,7 +110,7 @@ function cmdline.usage() {
 function cmdline.long_short() {
   # Build getopt strings and help message
   for key in $(printf "%s\n" "${!CMDLINE_OPTIONS[@]}" | sort); do
-    IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
+    IFS="|" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
 
     # Add short and long options to getopt strings
 		# add : if arg is not null
@@ -89,16 +118,24 @@ function cmdline.long_short() {
 		LONG_OPTS+="${long}${arg:+:},"
   done
   LONG_OPTS="${LONG_OPTS%,}"
-
-	echo "Short=$SHORT_OPTS long=$LONG_OPTS"
 }
 
 #
 # parse the command line strings to extract option values
 #
 function cmdline.parse() {
-  # Define the options in short=long[:arg]:description format
+  # Define the options in short=long[|arg]|description format
   declare -gA CMDLINE_ARGS=()
+
+  # set the default values up front
+	for key in "${!CMDLINE_OPTIONS[@]}" ; do
+    IFS="|" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
+    IFS="=" read -r txt default <<< "$arg"
+
+    if [ -n "${default}" ] ; then
+      CMDLINE_ARGS[$long]="${default}"
+    fi
+	done
 
   SHORT_OPTS=""
   LONG_OPTS=""
@@ -130,7 +167,7 @@ function cmdline.parse() {
         matched=false
 
         for key in "${!CMDLINE_OPTIONS[@]}"; do
-          IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
+          IFS="|" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
           if [[ "$opt" == "$short" || "$opt" == "$long" ]]; then
             matched=true
 
@@ -148,7 +185,7 @@ function cmdline.parse() {
         done
 
         if ! $matched; then
-          echo "Unknown option: $opt" >&2
+          echo "Unknown option| $opt" >&2
           exit 1
         fi
         ;;
