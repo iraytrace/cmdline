@@ -160,5 +160,7 @@ function cmdline.parse() {
   done
 
   # Return the remaining unprocessed arguments
-  CMDLINE_ARGS[positional]="$@" 
+  if [ -n "$*" ] ; then
+	  CMDLINE_ARGS[positional]="$@" 
+  fi
 }
