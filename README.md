@@ -5,7 +5,9 @@ Parse command line options in bash
 This script makes parsing command line arguments in bash scripts a comoddity
 rather than having to write the getopt code each time.
 
-## Example usage:
+## Example usage
+
+example.sh:
 ```
 !/usr/bin/env bash
 
@@ -24,9 +26,10 @@ for key in "${!CMDLINE_ARGS[@]}" ; do
 done
 ```
 
+## Running the example code
 ```
-$ ./sample_use.sh --help
-Usage: ./sample_use.sh [OPTIONS]
+$ ./example.sh --help
+Usage: ./example.sh [OPTIONS]
 
 Options:
   -h --help            Display this help message
@@ -34,7 +37,7 @@ Options:
   -f --file <filename> Specify filename to use
   -v --version         Show version
 
-$ ./sample_use.sh --file filename.txt
+$ ./example.sh --file filename.txt
 Command line options values:
   file=filename.txt
 ```
