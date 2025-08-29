@@ -10,7 +10,7 @@ cmdline.add_option "v|version||Show version"
 cmdline.set_default "timestamp" "date=$(date)"
 
 clean() { # simple function to handle command line option
-	echo "removing temporary files $@"
+  echo "removing temporary files $@"
 }
 
 # Parse the command line arguments into CMDLINE_ARGS array
@@ -30,26 +30,26 @@ cmdline.print_args
 
 # call functions for each command line argument if defined
 for key in "${!CMDLINE_ARGS[@]}" ; do
-	if declare -F $key > /dev/null ; then
-		"$key" "${CMDLINE_ARGS[$key]}"
-	fi
+  if declare -F $key > /dev/null ; then
+    "$key" "${CMDLINE_ARGS[$key]}"
+  fi
 done
 
 if [[ -v CMDLINE_ARGS[file] ]] ; then
-	# handle --file filename
-	echo "read file ${CMDLINE_ARGS[file]}"
+  # handle --file filename
+  echo "read file ${CMDLINE_ARGS[file]}"
 fi
 
 if [[ -v CMDLINE_ARGS[version] ]] ; then
-	# handle -v
-	echo "Version 1.0"
+  # handle -v
+  echo "Version 1.0"
 fi
 
 
 if [ $# -gt 0 ] ; then
-	for arg in $@ ; do
-		echo "process $arg"
-	done
+  for arg in $@ ; do
+    echo "process $arg"
+  done
 else
-	echo "no positional args"
+  echo "no positional args"
 fi
