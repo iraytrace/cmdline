@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 #
-# Example usage:
-#!/usr/bin/env bash
-# 
+# Example use:
 # source cmdline_options.sh
 # 
-# cmdline.add_option "c:clean:Remove Temporary Files"
-# cmdline.add_option "f:file:filename:Specify filename to use"
-# cmdline.add_option "v:version:Show version"
-# 
+# cmdline.add_option "c:clean::Remove Temporary Files"
+# cmdline.add_option "f:file:filename=default.txt:Specify filename to use"
+# cmdline.add_option "v:version::Show version"
+#
 # cmdline.parse "$@"
-# set -- ${CMDLINE_ARGS[positional]}
-# echo "have $*"
-# 
+# # print all the key/value pairs
+# echo "Command line options values:"
 # for key in "${!CMDLINE_ARGS[@]}" ; do
-# 	echo "${key}=${CMDLINE_ARGS[$key]}"
+# 	echo "  ${key}=${CMDLINE_ARGS[$key]}"
 # done
 
 declare -g CMDLINE_OPTIONS=( )
@@ -26,7 +23,7 @@ function cmdline.add_option() {
   CMDLINE_OPTIONS+=("$@")
 }
 
-cmdline.add_option "h:help:Display this help message"
+cmdline.add_option "h:help::Display this help message"
 
 #
 # 
@@ -36,16 +33,25 @@ function cmdline.max_width() {
 	for key in "${!CMDLINE_OPTIONS[@]}"; do
     str="${CMDLINE_OPTIONS[$key]}"
 
-	  pos=${str##*:}
+    IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
+    IFS="=" read -r txt default <<< "$arg"
 
-	  # position of last ':'
-    last_colon=$(( ${#str} - ${#pos} - 1 ))
+		left_side="${short}${long}${txt}"
+	  length=${#left_side}
 
-		if [ $max_option_length -lt $last_colon ] ; then
-			max_option_length=$last_colon
+		if [ $max_option_length -lt $length ] ; then
+			max_option_length=$length
 		fi
   done
   echo $max_option_length
+}
+
+function cmdline.print() {
+	# print all the key/value pairs
+	echo "Command line options values:"
+	for key in "${!CMDLINE_ARGS[@]}" ; do
+		echo "  ${key}=${CMDLINE_ARGS[$key]}"
+	done
 }
 
 
@@ -56,19 +62,15 @@ function cmdline.usage() {
   echo -e "Usage: $0 [OPTIONS]\n\nOptions:"	
 
   pad_width=$(cmdline.max_width)
-  pad_width=$(( $pad_width + 6 ))
+  pad_width=$(( $pad_width + 8 ))
 
 	for key in "${!CMDLINE_OPTIONS[@]}"; do
 		#echo "$key = ${CMDLINE_OPTIONS[$key]}"
     IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
  	
-    if [[ "$desc" == "" ]] ; then
-			left_string="-${short} --${long}"
-			right_string="${arg}"
-    else
-			left_string="-${short} --${long} <${arg}>"
-			right_string="${desc}"
-		fi
+    IFS="=" read -r txt default <<< "$arg"
+		left_string="-${short} --${long} ${arg:+<}${txt}${arg:+>}"
+		right_string="${desc} ${default:+(default=}${default}${default:+)}"
     printf "  %-*s%s\n" "$pad_width" "$left_string" "$right_string"
 	done
 }
@@ -82,16 +84,13 @@ function cmdline.long_short() {
     IFS=":" read -r short long arg desc <<< "${CMDLINE_OPTIONS[$key]}"
 
     # Add short and long options to getopt strings
-    if [[ "$desc" == "" ]] ; then
-			# option without an argument
-      SHORT_OPTS+="$short"
-      LONG_OPTS+="${long},"
-    else	
-      SHORT_OPTS+="${short}:"
-      LONG_OPTS+="${long}:,"
-    fi
+		# add : if arg is not null
+		SHORT_OPTS+="${short}${arg:+:}"
+		LONG_OPTS+="${long}${arg:+:},"
   done
   LONG_OPTS="${LONG_OPTS%,}"
+
+	echo "Short=$SHORT_OPTS long=$LONG_OPTS"
 }
 
 #
@@ -138,7 +137,7 @@ function cmdline.parse() {
 						if [[ "$long" == "help" ]] ; then
 							cmdline.usage
 							exit 0
-            elif [[ "$desc" == "" ]]; then
+            elif [[ "$arg" == "" ]]; then
 						  CMDLINE_ARGS[$long]="1"
             else
 						  CMDLINE_ARGS[$long]="$1"

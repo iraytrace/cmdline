@@ -2,9 +2,9 @@
 
 source cmdline_options.sh
 
-cmdline.add_option "c:clean:Remove Temporary Files"
-cmdline.add_option "f:file:filename:Specify filename to use"
-cmdline.add_option "v:version:Show version"
+cmdline.add_option "c:clean::Remove Temporary Files"
+cmdline.add_option "f:file:filename=default.txt:Specify filename to use"
+cmdline.add_option "v:version::Show version"
 
 clean() { # simple function to handle command line option
 	echo "removing temporary files $@"
