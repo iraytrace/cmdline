@@ -8,7 +8,7 @@ rather than having to write the getopt code each time.
 ## Example usage
 
 example.sh:
-```
+```bash
 !/usr/bin/env bash
 
 source cmdline_options.sh
